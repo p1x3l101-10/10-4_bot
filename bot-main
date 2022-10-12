@@ -5,6 +5,8 @@ import os
 from dotenv import load_dotenv
 import dbtools
 import btools
+import sys
+from discord.ext import tasks
 
 
 # Load envirenment variables
@@ -47,5 +49,25 @@ async def on_message(message):
         #    cmdexec(command, arguments, channel, user, username, client, discord)
         if dbtools.cmdquery(command, database + '/commands.json'):
             await btools.command_maker(command, arguments, channel, user, username, client, discord)
+            
+# Allow talking though the bot
+@tasks.loop(seconds=5)
+async def rc_bot():
+    #guild = client.get_guild(id=guild_id)
+    channel = client.get_channel(channel_id)
+    print('Ready for input!')
+    msg_o = sys.stdin.read()
+    await channel.send(msg_o)
 
+
+@rc_bot.before_loop
+async def rc_bot_before():
+    #global guild_id
+    #guild_id = int(input('Guild ID> '))
+    global channel_id
+    channel_id = int(input('Channel ID> '))
+    await client.wait_until_ready()
+
+
+rc_bot.start()
 client.run(os.getenv('TOKEN'))
